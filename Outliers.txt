@@ -1,0 +1,31 @@
+Sub Outliers()
+
+'copy contents from previous sheet
+Sheets("95% C.I.s").Select
+Sheets("95% C.I.s").Copy After:=Sheets("95% C.I.s")
+
+'Declare Variables
+Dim i As Integer
+Dim j As Integer
+Dim players As Integer
+Dim row As Long
+Dim col As Long
+
+'find number of rows and columns
+row = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).row
+col = ActiveSheet.Cells(1, Columns.Count).End(xlToLeft).Column
+'number of players
+players = row - 6
+
+'for loop to iterate through numbers and find red font
+For i = 2 To col
+    For j = 1 To players
+        If Cells(j, i).Font.Color = 255 Then
+        Cells(j, i).Clear
+        End If
+    Next j
+
+Next i
+
+
+End Sub

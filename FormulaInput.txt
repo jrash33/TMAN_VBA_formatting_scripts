@@ -1,0 +1,77 @@
+Sub FormulaInput()
+
+'copy contents from previous sheet
+'Sheets("95% C.I.s").Select
+'Sheets("95% C.I.s").Copy After:=Sheets("95% C.I.s")
+
+'Declare Variables
+Dim i As Integer
+Dim j As Integer
+Dim players As Integer
+Dim row As Long
+Dim col As Long
+
+'find number of rows and columns
+row = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).row
+col = ActiveSheet.Cells(1, Columns.Count).End(xlToLeft).Column
+'number of players
+players = row - 7
+
+
+i = players + 1
+Average = row - 4
+StDev = row - 3
+PlayerCount = row - 2
+TStat = row - 1
+PVal = row
+low = row + 1
+upper = row + 2
+
+'create 95% CI rows
+Range("A" & row & "").Select
+Selection.Copy
+Range("A" & low & "").Select
+ActiveSheet.Paste
+Range("A" & upper & "").Select
+ActiveSheet.Paste
+
+Range("A" & low & "").Value = "95% CI LOW"
+Range("A" & upper & "").Value = "95% CI HIGH"
+
+
+'create and fill formulas
+
+'Average
+Range("B" & Average & "").Formula = "=AVERAGE(B2:B" & i & ")"
+'StDev
+Range("B" & StDev & "").Formula = "=STDEV(B2:B" & i & ")"
+'# Players
+Range("B" & PlayerCount & "").Formula = "=COUNT(B2:B" & i & ")"
+'T Stat
+Range("B" & TStat & "").Formula = "=(B" & Average & ")/((B" & StDev & ")/SQRT((B" & PlayerCount & ")))"
+'PVal
+Range("B" & PVal & "").Formula = "=T.DIST.2T(ABS((B" & TStat & ")),(B" & PlayerCount & ")-1)"
+'95% CI low
+Range("B" & low & "").Formula = "=(B" & Average & ")-T.INV.2T(0.05,(B" & PlayerCount & ")-1)*((B" & StDev & ")/SQRT((B" & PlayerCount & ")))"
+'95% CI high
+Range("B" & upper & "").Formula = "=(B" & Average & ")+T.INV.2T(0.05,(B" & PlayerCount & ")-1)*((B" & StDev & ")/SQRT((B" & PlayerCount & ")))"
+
+
+'get rid of yellow fill if there
+Cells(PVal, 2).Interior.ColorIndex = 2
+'Fill these formulas right
+Range(Cells(Average, 2), Cells(upper, col)).Select
+Selection.FillRight
+
+
+For i = 2 To col
+    If Cells(PVal, i) <= 0.05 Then
+        Cells(PVal, i).Interior.ColorIndex = 6
+    End If
+Next i
+
+
+
+End Sub
+
+

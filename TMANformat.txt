@@ -1,0 +1,105 @@
+Sub TMANformat()
+'Go to the report tab on a raw TrackMan file exported to excel
+'this script will create a new tab with desired columns, create new variables we need, and fill the formulas
+'IMPORTANT:the final product of this code is trackman data that needs to be checked for missed shots
+'after missed shots are checked using the Date column, delete date column and export to rawcombined file with MoCap Data!
+
+'copy contents to new sheet
+ActiveSheet.Select
+ActiveSheet.Copy After:=Sheets(3)
+ActiveSheet.Name = "Report (2)"
+
+'delete unneeded columns
+Columns("AI:AJ").EntireColumn.Delete
+Columns("AE:AG").EntireColumn.Delete
+Columns("X:AB").EntireColumn.Delete
+Columns("V:V").EntireColumn.Delete
+Columns("T:T").EntireColumn.Delete
+Columns("P:P").EntireColumn.Delete
+Columns("F:N").EntireColumn.Delete
+Columns("C:C").EntireColumn.Delete
+
+'copy tags over
+Range("N4").Select
+Range(Selection, Selection.End(xlDown)).Select
+Selection.Copy
+Range("D4").Select
+Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+   :=False, Transpose:=False
+
+'Columns("N:N").EntireColumn.Delete
+Rows(3).Delete
+Rows(1).Delete
+
+'delete column now that it was copied over
+Columns("N:N").EntireColumn.Delete
+
+'create and fill formulas
+
+'back spin
+Range("N1") = "Back Spin"
+Range("N2").Formula = "=IF(OR(I2="""",H2=""""),""NaN"",H2*COS(I2/360*2*PI()))"
+
+'side spin
+Range("O1") = "Side Spin"
+Range("O2").Formula = "=IF(OR(I2="""",H2=""""),""NaN"",H2*SIN(I2/360*2*PI()))"
+
+'curvature
+Range("P1") = "Curvature"
+Range("P2").Formula = "=IF(OR(G2="""",K2="""",L2=""""),""NaN"",L2-K2*TAN(G2/360*2*PI()))"
+
+'smash factor
+Range("Q1") = "Smash Factor"
+Range("Q2").Value = "NaN"
+
+'Fill these formulas down
+row = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).row
+
+Range(Cells(2, 14), Cells(2, 17)).Select
+Selection.AutoFill Destination:=Range(Cells(2, 14), Cells(row, 17))
+
+'fill shot numbers
+Range("B2").Value = 1
+Range("B3").Value = 2
+Range("B2:B3").Select
+Selection.AutoFill Destination:=Range(Cells(2, 2), Cells(row, 2))
+
+
+'delete last few rows that overshot formulas
+Dim i As Integer
+i = row
+
+Do While Cells(i, 1) = ""
+    Rows(i).Delete
+    i = i - 1
+Loop
+
+
+'create new Sheet1 and tidy up for final analytics
+
+'copy contents to new sheet
+ActiveSheet.Select
+ActiveSheet.Copy After:=Sheets(4)
+ActiveSheet.Name = "Report (3)"
+
+'get rid of formulas
+Columns("N:Q").Select
+Selection.Copy
+Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+    :=False, Transpose:=False
+Application.CutCopyMode = False
+
+
+Columns("N:O").Select
+Selection.Copy
+Columns("H:H").Select
+ActiveSheet.Paste
+Columns("N:O").Select
+Application.CutCopyMode = False
+Selection.Delete Shift:=xlToLeft
+
+
+
+
+End Sub
+

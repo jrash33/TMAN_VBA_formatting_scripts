@@ -1,0 +1,224 @@
+Sub plots()
+
+Dim sh As String
+
+sh = ActiveSheet.Name
+
+
+If sh <> "plots" Then
+
+'create new worksheet
+Dim she As Worksheet
+Dim flg As Boolean
+
+'check to see if plots worksheet already exists
+For Each she In Worksheets
+If she.Name Like "plots" Then flg = True: Exit For
+Next
+If flg = True Then
+'if plots worksheet already exists, save as different name
+Sheets(sh).Select
+Sheets(sh).Copy After:=Sheets(sh)
+ActiveSheet.Name = "plots (2)"
+Else
+Sheets(sh).Select
+Sheets(sh).Copy After:=Sheets(sh)
+ActiveSheet.Name = "plots"
+End If
+
+
+'Declare Variables
+Dim i As Integer
+Dim j As Integer
+Dim k As Integer
+Dim row As Long
+Dim col As Long
+Dim val1 As Double
+Dim val2 As Double
+Dim doublesign(30) As Double
+
+'find number of rows and columns
+row = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).row
+col = ActiveSheet.Cells(1, Columns.Count).End(xlToLeft).Column
+
+low = row - 1
+upper = row
+
+
+'formatting for plots
+Range(Cells(low, 2), Cells(upper, col)).Select
+Selection.Copy
+Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+    :=False, Transpose:=False
+Range(Cells(2, 1), Cells(row - 2, col)).Select
+Application.CutCopyMode = False
+Selection.Delete Shift:=xlUp
+
+'find number of rows and columns
+row = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).row
+col = ActiveSheet.Cells(1, Columns.Count).End(xlToLeft).Column
+  
+'format double negatives and positives for easy plotting
+Range(Cells(2, 2), Cells(row, col)).Select
+Selection.Copy
+Range("B4").Select
+ActiveSheet.Paste
+j = 1
+For i = 2 To col
+
+'normalize spin variables
+If Abs(Cells(4, i)) > 30 Or Abs(Cells(5, i)) > 30 Then
+Cells(4, i) = Cells(4, i) / 10
+Cells(5, i) = Cells(5, i) / 10
+End If
+
+'format signs for plotting
+If Cells(4, i) > 0 And Cells(5, i) > 0 Then
+Cells(5, i) = Cells(5, i) - Cells(4, i)
+doublesign(j) = Cells(4, i)
+j = j + 1
+ElseIf Cells(4, i) < 0 And Cells(5, i) < 0 Then
+val1 = Cells(4, i)
+val2 = Cells(5, i)
+
+Cells(5, i) = val1
+Cells(4, i) = val2
+
+Cells(5, i) = Cells(5, i) - Cells(4, i)
+doublesign(j) = Cells(4, i)
+j = j + 1
+End If
+
+Next i
+
+
+Range(Cells(4, 2), Cells(row + 2, col)).Select
+Selection.Cut
+Range("B2").Select
+ActiveSheet.Paste
+
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'CREATE PLOTS
+
+    Dim rRange As Range
+
+
+    On Error Resume Next
+
+        Application.DisplayAlerts = False
+
+            Set rRange = Application.InputBox(Prompt:= _
+               "Select Columns Individually to be Plotted", _
+                Title:="95% CI Bar Graph", Type:=8)
+
+
+    On Error GoTo 0
+
+        Application.DisplayAlerts = True
+
+        If rRange Is Nothing Then
+           Exit Sub
+        Else
+        rRange.Font.Bold = True
+          rRange.Select
+          rRange.Activate
+          ActiveSheet.Shapes.AddChart2(297, xlColumnStacked).Select
+          ActiveChart.FullSeriesCollection(2).Select
+        With Selection.Format.Fill
+        .Visible = msoTrue
+        .ForeColor.ObjectThemeColor = msoThemeColorAccent1
+        .ForeColor.TintAndShade = 0
+        .ForeColor.Brightness = 0
+        .Transparency = 0
+        .Solid
+        End With
+        ActiveChart.FullSeriesCollection(1).Select
+        With Selection.Format.Fill
+       .Visible = msoTrue
+       .ForeColor.ObjectThemeColor = msoThemeColorAccent1
+       .ForeColor.TintAndShade = 0
+       .ForeColor.Brightness = 0
+       .Transparency = 0
+       .Solid
+        End With
+        'delete default legend
+        ActiveChart.Legend.Select
+        Selection.Delete
+        'delete gridlines
+        ActiveChart.Axes(xlValue).MajorGridlines.Select
+        Selection.Delete
+        'axis title
+        ActiveChart.HasTitle = True
+        ActiveChart.ChartTitle.Text = "95% CI: "
+        ActiveChart.Axes(xlValue, xlPrimary).HasTitle = True
+        ActiveChart.Axes(xlValue, xlPrimary).AxisTitle.Characters.Text = "mph/deg/yds/rpm*10/mm"
+        
+    
+'unfill double negatives/positives
+    Dim ii As Range
+    Dim p As Integer
+    Dim Number As Integer
+    Dim counter As Integer
+    
+
+j = 1
+
+For Each ii In rRange
+j = j + 1
+Next ii
+
+Number = j - 1
+Number = Number / 2
+counter = Number
+
+
+Dim Val(30) As Double
+Dim findcol(30) As Double
+j = 1
+k = 1
+
+For Each ii In rRange
+Val(j) = ii
+
+If j Mod 2 = 0 Then
+
+    If Val(j) > 0 And Val(j - 1) > 0 Then
+    findcol(k) = j / 2
+    counter = counter - 1
+    'MsgBox (findcol(k))
+    k = k + 1
+    ElseIf Val(j) < 0 And Val(j - 1) < 0 Then
+    findcol(k) = j / 2
+    counter = counter - 1
+    'MsgBox (findcol(k))
+    k = k + 1
+    End If
+    
+j = j + 1
+Else
+j = j + 1
+End If
+
+Next ii
+
+Number = Number - counter
+
+p = 1
+
+For p = 1 To Number
+
+    'MsgBox (findcol(p))
+    ActiveChart.FullSeriesCollection(1).Select
+    ActiveChart.FullSeriesCollection(1).Points(findcol(p)).Select
+    Selection.Format.Fill.Visible = msoFalse
+Next p
+
+  
+End If
+
+
+
+End Sub
+
+

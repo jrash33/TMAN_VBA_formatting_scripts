@@ -1,0 +1,57 @@
+Sub CIplayers()
+
+
+'Dim she As Worksheet
+'Dim flg As Boolean
+
+'AVERAGES
+'For Each she In Worksheets
+'If she.Name Like "Averages" Then flg = True: Exit For
+'Next
+'If flg = True Then
+
+'MsgBox ("found Averages!")
+
+'flg = False
+'End If
+
+'STDEVS
+'For Each she In Worksheets
+'If she.Name Like "Stdevs" Then flg = True: Exit For
+'Next
+'If flg = True Then
+
+'MsgBox ("found Stdevs!")
+
+'flg = False
+'End If
+
+'Ns
+'For Each she In Worksheets
+'If she.Name Like "Ns" Then flg = True: Exit For
+'Next
+'If flg = True Then
+
+'MsgBox ("found Ns!")
+
+
+'End If
+
+'how to select certain sheet
+    Sheets("Averages").Select
+    Range("C2").Select
+    Selection.Copy
+    Sheets("Sheet21").Select
+    ActiveSheet.Paste
+    
+'how to write formulas to cell with other sheets
+    ActiveCell.FormulaR1C1 = "=Averages!RC[1]+Stdevs!RC[1]+Ns!RC[1]"
+    Range("B3").Select
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'main
+Sheets("Averages").Select
+
+
+
+
+End Sub

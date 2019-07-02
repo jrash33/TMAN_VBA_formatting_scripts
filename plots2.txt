@@ -1,0 +1,170 @@
+Sub plots()
+
+Dim sh As String
+
+sh = ActiveSheet.Name
+
+
+If sh <> "plots" Then
+'copy contents from previous sheet
+'Sheets("95% C.I.s (2)").Select
+'Sheets("95% C.I.s (2)").Copy After:=Sheets("95% C.I.s (2)")
+Sheets(sh).Select
+Sheets(sh).Copy After:=Sheets(sh)
+ActiveSheet.Name = "plots"
+
+'Declare Variables
+Dim i As Integer
+Dim j As Integer
+Dim row As Long
+Dim col As Long
+Dim val1 As Double
+Dim val2 As Double
+
+'find number of rows and columns
+row = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).row
+col = ActiveSheet.Cells(1, Columns.Count).End(xlToLeft).Column
+
+low = row - 1
+upper = row
+
+
+'formatting for plots
+Range(Cells(low, 2), Cells(upper, col)).Select
+Selection.Copy
+Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+    :=False, Transpose:=False
+Range(Cells(2, 1), Cells(row - 2, col)).Select
+Application.CutCopyMode = False
+Selection.Delete Shift:=xlUp
+
+'find number of rows and columns
+row = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).row
+col = ActiveSheet.Cells(1, Columns.Count).End(xlToLeft).Column
+  
+'format double negatives and positives for easy plotting
+Range(Cells(2, 2), Cells(row, col)).Select
+Selection.Copy
+Range("B4").Select
+ActiveSheet.Paste
+
+For i = 2 To col
+
+'normalize spin variables
+If Abs(Cells(4, i)) > 30 Or Abs(Cells(5, i)) > 30 Then
+Cells(4, i) = Cells(4, i) / 10
+Cells(5, i) = Cells(5, i) / 10
+End If
+
+'format signs for plotting
+If Cells(4, i) > 0 And Cells(5, i) > 0 Then
+Cells(5, i) = Cells(5, i) - Cells(4, i)
+ElseIf Cells(4, i) < 0 And Cells(5, i) < 0 Then
+val1 = Cells(4, i)
+val2 = Cells(5, i)
+
+Cells(5, i) = val1
+Cells(4, i) = val2
+
+Cells(5, i) = Cells(5, i) - Cells(4, i)
+End If
+
+Next i
+
+
+Range(Cells(4, 2), Cells(row + 2, col)).Select
+Selection.Cut
+Range("B2").Select
+ActiveSheet.Paste
+
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'create plots
+    Dim rRange As Range
+
+    On Error Resume Next
+
+        Application.DisplayAlerts = False
+
+            Set rRange = Application.InputBox(Prompt:= _
+                "Please select a range with your Mouse to be bolded.", _
+                    Title:="SPECIFY RANGE", Type:=8)
+
+    On Error GoTo 0
+
+        Application.DisplayAlerts = True
+
+        If rRange Is Nothing Then
+           Exit Sub
+        Else
+        rRange.Select
+        
+        'output the intervals we will be working with for plot easy plot formatting reference
+        rRange.Copy
+        Cells(6, 1).Select
+        ActiveSheet.Paste
+        'find number of plots
+        col = ActiveSheet.Cells(6, Columns.Count).End(xlToLeft).Column
+        
+        'create plots
+        rRange.Select
+        rRange.Activate
+        ActiveSheet.Shapes.AddChart2(297, xlColumnStacked).Select
+        ActiveChart.FullSeriesCollection(2).Select
+        With Selection.Format.Fill
+        .Visible = msoTrue
+        .ForeColor.ObjectThemeColor = msoThemeColorAccent1
+        .ForeColor.TintAndShade = 0
+        .ForeColor.Brightness = 0
+        .Transparency = 0
+        .Solid
+        End With
+        ActiveChart.FullSeriesCollection(1).Select
+        With Selection.Format.Fill
+       .Visible = msoTrue
+       .ForeColor.ObjectThemeColor = msoThemeColorAccent1
+       .ForeColor.TintAndShade = 0
+       .ForeColor.Brightness = 0
+       .Transparency = 0
+       .Solid
+        End With
+        
+        'delete default legend
+        ActiveChart.Legend.Select
+        Selection.Delete
+        'delete gridlines
+        ActiveChart.Axes(xlValue).MajorGridlines.Select
+        Selection.Delete
+        'axis title
+        ActiveChart.HasTitle = True
+        ActiveChart.ChartTitle.Text = "95% CI: "
+        ActiveChart.Axes(xlValue, xlPrimary).HasTitle = True
+        ActiveChart.Axes(xlValue, xlPrimary).AxisTitle.Characters.Text = "mph/deg/yds/rpm*10/mm"
+        
+        'unfill
+        For i = 1 To col
+            If Cells(6, i) > 0 And Cells(7, i) > 0 Then
+                ActiveChart.FullSeriesCollection(1).Select
+                ActiveChart.FullSeriesCollection(1).Points(i).Select
+                Selection.Format.Fill.Visible = msoFalse
+            ElseIf Cells(6, i) < 0 And Cells(7, i) < 0 Then
+                ActiveChart.FullSeriesCollection(1).Select
+                ActiveChart.FullSeriesCollection(1).Points(i).Select
+                Selection.Format.Fill.Visible = msoFalse
+            End If
+            
+        Next i
+        
+        'clear contents we used to make plots
+        Range(Cells(6, 1), Cells(7, col)).Select
+        Selection.ClearContents
+  
+        End If
+
+
+
+End Sub
+
+
+
